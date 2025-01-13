@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  bitcoin:
+    image: bitcoin/bitcoin
+    container_name: bitcoin-regtest
+    command: 
+      - bitcoind
+      - -regtest
+      - -server=1
+      - -rpcallowip=0.0.0.0/0
+      - -rpcbind=0.0.0.0
+      - -rpcuser=user
+      - -rpcpassword=pass
+      - -txindex=1
+      - -printtoconsole
+    volumes:
+      - ./bitcoin-data:/root/.bitcoin
+    ports:
+      - "18443:18443"
+      - "18444:18444"
+    networks:
+      - bitcoin-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      container_name: api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - bitcoin
+    networks:
+      - bitcoin-network
+    environment:
+      - BITCOIN_RPC_HOST=bitcoin
+      - BITCOIN_RPC_PORT=18443
+      - BITCOIN_RPC_USER=user
+      - BITCOIN_RPC_PASSWORD=pass
+
+networks:
+  bitcoin-network:
+    driver: bridge

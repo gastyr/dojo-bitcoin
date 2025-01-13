@@ -1,0 +1,11 @@
+[project]
+name = "dojo-bitcoin-2025"
+version = "0.1.0"
+description = "Bitcoin Block Explorer API"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.6",
+    "python-bitcoinlib>=0.12.2",
+    "uvicorn>=0.34.0",
+]
