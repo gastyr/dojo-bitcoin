@@ -6,6 +6,7 @@ COPY . /app
 # Define o diretório de trabalho
 WORKDIR /app
 # Instala as dependências usando UV
+RUN uv venv
 RUN uv sync --frozen --no-cache
 # Expõe a porta da API
 EXPOSE 8000
