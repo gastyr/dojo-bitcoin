@@ -4,7 +4,7 @@ import logging
 import os
 import traceback
 from typing import Dict
-from bitcoin.rpc import RawProxy
+from bitcoin.rpc import RawProxy, JSONRPCError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ class BitcoinSimulator:
         self.service_url = f"http://{user}:{password}@{host}:{port}"
         self.addresses: Dict[str, float] = {}
         self.mining_address = None
+        self.fallback_fee = 0.00001
 
         # Esperar o node Bitcoin estar pronto
         self.wait_for_bitcoin_node()
@@ -40,60 +41,143 @@ class BitcoinSimulator:
                 logger.info(f"Tentativa {retry}/{max_retries}...")
                 time.sleep(2)
         raise Exception("Não foi possível conectar ao Bitcoin node após várias tentativas.")
+    
+    def create_wallet(self):
+        """Cria uma nova wallet se não existir"""
+        try:
+            # Tenta criar uma nova wallet
+            logger.info("Criando wallet...")
+            try:
+                self.rpc.createwallet("simulator_wallet")
+                logger.info("Nova wallet 'simulator_wallet' criada com sucesso")
+            except JSONRPCError as ex:
+                if "Database already exists" in str(ex):
+                    logger.info("Wallet 'simulator_wallet' já existe, carregando...")
+                    self.rpc.loadwallet("simulator_wallet")
+                else:
+                    raise
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar/carregar wallet: {e}")
+            raise
+
+    def verify_blockchain_state(self):
+        """Verifica o estado atual do blockchain"""
+        try:
+            info = self.rpc.getblockchaininfo()
+            logger.info("Estado atual do blockchain:")
+            logger.info(f"Blocos: {info['blocks']}")
+            logger.info(f"Headers: {info['headers']}")
+            logger.info(f"Chain: {info['chain']}")
+            return info
+        except Exception as ex:
+            logger.error(f"Erro ao verificar estado do blockchain: {ex}")
+            raise
 
     def setup_wallets(self, num_wallets: int = 10):
         """Cria carteiras e armazena seus endereços"""
-        logger.info(f"Criando {num_wallets} carteiras...")
+        try:
+            logger.info(f"Criando {num_wallets} carteiras...")
 
-        # Criar endereço para mineração
-        self.mining_address = self.rpc.getnewaddress("mining")
-        logger.info(f"Endereço de mineração: {self.mining_address}")
+            # Criar endereço para mineração
+            self.mining_address = self.rpc.getnewaddress("mining")
+            # Importar endereço de mineração para observação
+            self.rpc.importaddress(self.mining_address, "mining", False)
+            logger.info(f"Endereço de mineração: {self.mining_address}")
 
-        # Criar demais endereços
-        for i in range(num_wallets):
-            address = self.rpc.getnewaddress(f"wallet{i}")
-            self.addresses[address] = 0
-            logger.info(f"Criada carteira {i}: {address}")
+            # Criar demais endereços
+            for i in range(num_wallets):
+                address = self.rpc.getnewaddress(f"wallet{i}")
+                self.addresses[address] = 0
+                # Importar endereço para observação
+                self.rpc.importaddress(address, f"wallet{i}", False)
+                logger.info(f"Criada carteira {i}: {address}")
+        except Exception as ex:
+            logger.error(f"Erro ao criar endereços: {ex}")
+            raise
 
     def generate_initial_blocks(self, num_blocks: int = 101):
         """Gera blocos iniciais para ter fundos para transações"""
-        logger.info(f"Gerando {num_blocks} blocos iniciais...")
+        try:
+            logger.info(f"Gerando {num_blocks} blocos iniciais...")
 
-        for i in range(0, num_blocks, 10):
-            blocks_to_generate = min(10, num_blocks - i)
-            self.rpc.generatetoaddress(blocks_to_generate, self.mining_address)
-            logger.info(f"Gerados {blocks_to_generate} blocos ({i+1}-{i+blocks_to_generate})")
+            for i in range(0, num_blocks, 10):
+                blocks_to_generate = min(10, num_blocks - i)
+                self.rpc.generatetoaddress(blocks_to_generate, self.mining_address)
+                logger.info(f"Gerados {blocks_to_generate} blocos ({i+1}-{i+blocks_to_generate})")
 
-        balance = self.rpc.getbalance()
-        logger.info(f"Saldo após mineração inicial: {balance} BTC")
+            balance = self.rpc.getbalance()
+            logger.info(f"Saldo após mineração inicial: {balance} BTC")
+        except Exception as ex:
+            logger.error(f"Erro ao gerar blocos iniciais: {ex}")
+            raise
 
     def create_simple_transaction(self, addresses):
         """Cria uma transação simples"""
-        sender = random.choice(addresses)
-        receiver = random.choice([addr for addr in addresses if addr != sender])
-        amount = random.uniform(0.0001, 0.1)
-        txid = self.rpc.sendtoaddress(receiver, amount)
-        logger.info(f"Transação simples criada: {amount:.8f} BTC para {receiver}, TXID: {txid}")
+        try:
+            sender = random.choice(addresses)
+            receiver = random.choice([addr for addr in addresses if addr != sender])
+            amount = round(random.uniform(0.0001, 0.01), 8)
+            
+            txid = self.rpc.sendtoaddress(
+                receiver, 
+                amount,
+                "",     # Comment
+                "",     # Comment from
+                False,  # Subtract fee from amount
+                True    # Replaceable
+            )
+            logger.info(f"Transação simples criada: {amount:.8f} BTC para {receiver}, TXID: {txid}")
+            return txid
+        except Exception as e:
+            logger.error(f"Erro ao criar transação simples: {e}")
+            raise
 
     def create_multi_output_transaction(self, addresses):
         """Cria uma transação com múltiplos outputs"""
-        receivers = random.sample(addresses, 3)
-        outputs = {recv: random.uniform(0.0001, 0.05) for recv in receivers}
+        try:
+            receivers = random.sample(addresses, min(3, len(addresses)))
+            outputs = {}
+            for recv in receivers:
+                # Reduzindo o valor das transações
+                amount = round(random.uniform(0.0001, 0.01), 8)
+                outputs[recv] = amount
 
-        raw_tx = self.rpc.createrawtransaction([], outputs)
-        funded_tx = self.rpc.fundrawtransaction(raw_tx)
-        signed_tx = self.rpc.signrawtransactionwithwallet(funded_tx['hex'])
-        txid = self.rpc.sendrawtransaction(signed_tx['hex'])
-        logger.info(f"Transação com múltiplos outputs criada, TXID: {txid}")
+            raw_tx = self.rpc.createrawtransaction([], outputs)
+            
+            # Configurando opções básicas para fundrawtransaction
+            options = {
+                "changePosition": 1,
+                "replaceable": True
+            }
+            
+            funded_tx = self.rpc.fundrawtransaction(raw_tx, options)
+            signed_tx = self.rpc.signrawtransactionwithwallet(funded_tx['hex'])
+            txid = self.rpc.sendrawtransaction(signed_tx['hex'])
+            logger.info(f"Transação com múltiplos outputs criada, TXID: {txid}")
+            return txid
+        except Exception as e:
+            logger.error(f"Erro ao criar transação múltipla: {e}")
+            raise
 
     def create_chain_transaction(self, addresses):
         """Cria uma cadeia de transações"""
-        addr1, addr2, addr3 = random.sample(addresses, 3)
-        amount = random.uniform(0.001, 0.01)
-        txid1 = self.rpc.sendtoaddress(addr1, amount)
-        txid2 = self.rpc.sendtoaddress(addr2, amount / 2)
-        txid3 = self.rpc.sendtoaddress(addr3, amount / 4)
-        logger.info(f"Transações em cadeia criadas, TXIDs: {txid1}, {txid2}, {txid3}")
+        try:
+            if len(addresses) < 3:
+                raise ValueError("Necessário pelo menos 3 endereços para criar cadeia de transações")
+                
+            addr1, addr2, addr3 = random.sample(addresses, 3)
+            amount = round(random.uniform(0.001, 0.005), 8)
+            txid1 = self.rpc.sendtoaddress(addr1, amount)
+            time.sleep(0.3)
+            txid2 = self.rpc.sendtoaddress(addr2, round(amount / 2, 8))
+            time.sleep(0.3)
+            txid3 = self.rpc.sendtoaddress(addr3, round(amount / 4, 8))
+            
+            logger.info(f"Transações em cadeia criadas, TXIDs: {txid1}, {txid2}, {txid3}")
+        except Exception as e:
+            logger.error(f"Erro ao criar cadeia de transações: {e}")
+            raise
 
     def create_complex_transactions(self, num_transactions: int = 100):
         """Cria transações variadas entre as carteiras"""
@@ -102,6 +186,11 @@ class BitcoinSimulator:
 
         for i in range(num_transactions):
             try:
+                # Gera um bloco a cada 2 transações para garantir fundos suficientes
+                if i % 2 == 0:
+                    self.rpc.generatetoaddress(1, self.mining_address)
+                    time.sleep(0.3)
+                
                 if i % 3 == 0:
                     self.create_simple_transaction(addresses)
                 elif i % 3 == 1:
@@ -109,24 +198,29 @@ class BitcoinSimulator:
                 else:
                     self.create_chain_transaction(addresses)
 
-                if (i + 1) % 5 == 0:
-                    self.rpc.generatetoaddress(1, self.mining_address)
-                    logger.info(f"Novo bloco gerado após {i+1} transações")
+                time.sleep(0.3)
             except Exception as e:
                 logger.error(f"Erro na transação {i+1}: {e}\n{traceback.format_exc()}")
+                try:
+                    self.rpc.generatetoaddress(1, self.mining_address)
+                    time.sleep(2)
+                except Exception as ex:
+                    logger.error(f"Erro ao criar transações: {str(ex)}")
 
-    def run_simulation(self, num_wallets: int = 10, num_transactions: int = 100, final_blocks: int = 10):
+    def run_simulation(self, num_wallets: int = 5, num_transactions: int = 50, final_blocks: int = 10):
         """Executa a simulação completa"""
         try:
             logger.info("Iniciando simulação do blockchain...")
 
+            self.create_wallet()
             self.setup_wallets(num_wallets)
-            self.generate_initial_blocks(101)
+            # Aumentando número de blocos iniciais para ter mais fundos
+            self.generate_initial_blocks(201)  # Gerando mais blocos iniciais
 
-            for batch in range((num_transactions + 19) // 20):
+            for batch in range((num_transactions + 9) // 10):
                 logger.info(f"Iniciando lote {batch+1} de transações...")
-                self.create_complex_transactions(min(20, num_transactions - batch * 20))
-                self.rpc.generatetoaddress(3, self.mining_address)
+                self.create_complex_transactions(min(10, num_transactions - batch * 10))
+                self.rpc.generatetoaddress(5, self.mining_address)  # Gerando blocos entre lotes
 
             logger.info(f"Gerando {final_blocks} blocos finais...")
             self.rpc.generatetoaddress(final_blocks, self.mining_address)

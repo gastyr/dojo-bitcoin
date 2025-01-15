@@ -5,8 +5,6 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 # Copia apenas os arquivos necessários para o simulador
 COPY . .
-COPY ../pyproject.toml .
-COPY ../.python-version .
 
 # Usa o Python do sistema (apenas para containers)
 ENV UV_PROJECT_ENVIRONMENT="/usr/local/"

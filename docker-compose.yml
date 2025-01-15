@@ -4,7 +4,8 @@ services:
     container_name: bitcoin-regtest
     command: 
       - bitcoind
-      - -regtest
+      - -regtest=1
+      - -fallbackfee=0.00001
       - -server=1
       - -rpcallowip=0.0.0.0/0
       - -rpcbind=0.0.0.0
@@ -21,8 +22,8 @@ services:
       - bitcoin-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "bitcoin-cli", "-regtest", "getblockchaininfo"]
-      interval: 10s
+      test: ["CMD", "bitcoin-cli", "-regtest", "-rpcuser=user", "-rpcpassword=pass", "getblockchaininfo"]
+      interval: 5s
       timeout: 5s
       retries: 5
     logging:
@@ -38,7 +39,7 @@ services:
     container_name: block-simulator
     depends_on:
       bitcoin:
-      condition: service_healthy
+        condition: service_healthy
     networks:
       - bitcoin-network
     environment:

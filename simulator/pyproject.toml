@@ -1,0 +1,9 @@
+[project]
+name = "block-simulator"
+version = "0.1.0"
+description = "simulates the daily life of a blockchain, with transactions, wallets and blocks."
+readme = ""
+requires-python = ">=3.12"
+dependencies = [
+    "python-bitcoinlib>=0.12.2",
+]
