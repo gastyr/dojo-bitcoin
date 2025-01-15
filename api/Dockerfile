@@ -5,7 +5,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 # Copia a aplicação para o container
 COPY . .
-
+COPY ../pyproject.toml ../.python-version ./
 # Usa o Python do sistema (apenas para containers)
 ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
 

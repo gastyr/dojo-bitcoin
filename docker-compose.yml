@@ -19,10 +19,43 @@ services:
       - "18444:18444"
     networks:
       - bitcoin-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "-regtest", "getblockchaininfo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  simulator:
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile
+    container_name: block-simulator
+    depends_on:
+      bitcoin:
+      condition: service_healthy
+    networks:
+      - bitcoin-network
+    environment:
+      - BITCOIN_RPC_HOST=bitcoin
+      - BITCOIN_RPC_PORT=18443
+      - BITCOIN_RPC_USER=user
+      - BITCOIN_RPC_PASSWORD=pass
+    restart: "no"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   api:
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile
     container_name: bitcoin-explorer-api
     ports:
@@ -36,6 +69,12 @@ services:
       - BITCOIN_RPC_PORT=18443
       - BITCOIN_RPC_USER=user
       - BITCOIN_RPC_PASSWORD=pass
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   bitcoin-network:

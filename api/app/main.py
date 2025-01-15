@@ -18,7 +18,7 @@ def get_bitcoin_rpc() -> RawProxy:
     service_url = f"http://{user}:{password}@{host}:{port}"
     return RawProxy(service_url=service_url)
 
-# Criamos uma única instância do RPC client
+# Cria uma única instância do RPC client
 bitcoin_rpc = get_bitcoin_rpc()
 
 @app.get("/")
