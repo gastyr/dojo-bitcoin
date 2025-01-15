@@ -81,18 +81,14 @@ class BitcoinSimulator:
 
             # Criar endereço para mineração
             self.mining_address = self.rpc.getnewaddress("mining")
-            # Importar endereço de mineração para observação
-            self.rpc.importaddress(self.mining_address, "mining", False)
             logger.info(f"Endereço de mineração: {self.mining_address}")
 
             # Criar demais endereços
             for i in range(num_wallets):
                 address = self.rpc.getnewaddress(f"wallet{i}")
                 self.addresses[address] = 0
-                # Importar endereço para observação
-                self.rpc.importaddress(address, f"wallet{i}", False)
-                logger.info(f"Criada carteira {i}: {address}")
-        except Exception as ex:
+                logger.info(f"Criado endereço para wallet{i}: {address}")
+        except JSONRPCError as ex:
             logger.error(f"Erro ao criar endereços: {ex}")
             raise
 
@@ -207,6 +203,32 @@ class BitcoinSimulator:
                 except Exception as ex:
                     logger.error(f"Erro ao criar transações: {str(ex)}")
 
+    def distribute_initial_funds(self, amount: float = 10):
+        """Distribui fundos iniciais para cada endereço a partir da carteira mineradora."""
+        try:
+            if not self.mining_address:
+                raise ValueError("Endereço minerador não está configurado.")
+
+            for address in self.addresses:
+                # Cria uma transação do endereço minerador para o endereço alvo
+                outputs = {address: amount}
+                raw_tx = self.rpc.createrawtransaction([], outputs)
+
+                # Vincula os fundos ao endereço minerador
+                options = {
+                    "changeAddress": self.mining_address,
+                    "replaceable": True
+                }
+                funded_tx = self.rpc.fundrawtransaction(raw_tx, options)
+
+                # Assina e envia a transação
+                signed_tx = self.rpc.signrawtransactionwithwallet(funded_tx['hex'])
+                txid = self.rpc.sendrawtransaction(signed_tx['hex'])
+                logger.info(f"Enviados {amount:.8f} BTC de {self.mining_address} para {address}, TXID: {txid}")
+        except Exception as e:
+            logger.error(f"Erro ao distribuir fundos iniciais: {e}")
+            raise
+
     def run_simulation(self, num_wallets: int = 5, num_transactions: int = 50, final_blocks: int = 10):
         """Executa a simulação completa"""
         try:
@@ -214,8 +236,10 @@ class BitcoinSimulator:
 
             self.create_wallet()
             self.setup_wallets(num_wallets)
-            # Aumentando número de blocos iniciais para ter mais fundos
-            self.generate_initial_blocks(201)  # Gerando mais blocos iniciais
+            self.generate_initial_blocks(201)
+            
+            logger.info("Distribuindo fundos iniciais...")
+            self.distribute_initial_funds(10)
 
             for batch in range((num_transactions + 9) // 10):
                 logger.info(f"Iniciando lote {batch+1} de transações...")
