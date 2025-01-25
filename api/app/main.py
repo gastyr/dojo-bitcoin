@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from bitcoin.rpc import RawProxy, JSONRPCError
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -49,6 +50,21 @@ class BitcoinRPC:
             self._rpc = None
 
 app = FastAPI(title="Bitcoin Block Explorer API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:9000",  # Desenvolvimento local (ajuste a porta se necessário)
+        "http://localhost:8080",
+        "http://136.248.90.25:8000",    # Seu servidor em produção
+        "http://136.248.90.25",         # Caso acesse sem a porta
+        "https://136.248.90.25",        # Se usar HTTPS
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos os métodos HTTP (GET, POST, etc)
+    allow_headers=["*"],  # Permite todos os headers
+)
+
 config = BitcoinConfig.from_env()
 bitcoin = BitcoinRPC(config)
 
