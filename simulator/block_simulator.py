@@ -234,6 +234,14 @@ class BitcoinSimulator:
         try:
             logger.info("Iniciando simulação do blockchain...")
 
+            # Verifica o estado atual da blockchain
+            blockchain_info = self.verify_blockchain_state()
+            current_blocks = blockchain_info['blocks']
+
+            if current_blocks > 100:
+                logger.info(f"A blockchain já possui {current_blocks} blocos. Nenhuma ação será realizada.")
+                return
+
             self.create_wallet()
             self.setup_wallets(num_wallets)
             self.generate_initial_blocks(201)
