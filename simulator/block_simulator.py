@@ -229,7 +229,7 @@ class BitcoinSimulator:
             logger.error(f"Erro ao distribuir fundos iniciais: {e}")
             raise
 
-    def run_simulation(self, num_wallets: int = 5, num_transactions: int = 50, final_blocks: int = 10):
+    def run_simulation(self, num_wallets: int = 5, num_transactions: int = 50, final_blocks: int = 101):
         """Executa a simulação completa"""
         try:
             logger.info("Iniciando simulação do blockchain...")
