@@ -49,16 +49,18 @@ class BitcoinRPC:
         finally:
             self._rpc = None
 
+external_ip = os.getenv("EXTERNAL_IP", "localhost")
+
 app = FastAPI(title="Bitcoin Block Explorer API")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:9000",  # Desenvolvimento local (ajuste a porta se necessário)
+        "http://localhost:9000",
         "http://localhost:8080",
-        "http://136.248.90.25:8000",    # Seu servidor em produção
-        "http://136.248.90.25",         # Caso acesse sem a porta
-        "https://136.248.90.25",        # Se usar HTTPS
+        f"http://{external_ip}:8000",
+        f"http://{external_ip}",
+        f"https://{external_ip}",
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Permite todos os métodos HTTP (GET, POST, etc)
