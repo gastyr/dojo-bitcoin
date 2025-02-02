@@ -16,7 +16,4 @@ RUN uv sync --no-cache
 EXPOSE 8000
 
 # Cria uma variável de ambiente com o IP do servidor
-ENTRYPOINT ["sh", "-c", "export EXTERNAL_IP=$(curl -s https://checkip.amazonaws.com) &&"]
-
-# Roda a aplicação usando uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["sh", "-c", "export EXTERNAL_IP=$(curl -s https://checkip.amazonaws.com) && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
