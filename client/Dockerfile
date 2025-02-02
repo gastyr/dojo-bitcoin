@@ -1,5 +1,5 @@
 # Stage 1: Build application
-FROM node:lts-slim as builder
+FROM node:lts-slim AS builder
 
 WORKDIR /app
 
@@ -7,8 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies with clean cache
-RUN npm ci --no-cache && \
-    npm cache clean --force
+RUN npm install
 
 # Copy source files
 COPY . .
