@@ -12,6 +12,11 @@ RUN npm install
 # Copy source files
 COPY . .
 
+# Run quasar prepare with full project structure
+RUN npx quasar prepare
+
+RUN npm install
+
 # Build Quasar app
 RUN quasar build
 
