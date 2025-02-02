@@ -273,6 +273,12 @@ async def get_address_balance(address: str) -> Dict[str, Any]:
     """
     try:
         with bitcoin.get_rpc() as rpc:
+            # Verifica se a carteira está disponível
+            try:
+                rpc.getwalletinfo()
+            except JSONRPCError:
+                raise HTTPException(status_code=404, detail="Carteira não encontrada")
+
             # Primeiro tenta obter o saldo via getreceivedbyaddress
             try:
                 received = rpc.getreceivedbyaddress(address)
