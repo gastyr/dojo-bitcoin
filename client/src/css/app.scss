@@ -1,0 +1,119 @@
+// Opção 1: Azul para cinza (diagonal)
+.bg-gradient-blue-gray {
+  background: linear-gradient(
+    135deg,
+    #103963 0%,
+    #19242e 80%
+  );
+}
+
+
+.ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+  
+.inputs-card,
+.outputs-card {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .bg-gradient {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    backdrop-filter: blur(10px);
+  }
+  
+  .bg-gradient-secondary {
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.1) 100%
+    );
+  }
+  
+  .bg-gradient-main {
+    background: linear-gradient(
+      135deg,
+      var(--q-primary) 0%,
+      var(--q-dark) 100%
+    );
+    min-height: 100vh;
+  }
+
+  .animated {
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(20px); }
+  }
+
+  // Color variables
+$primary-accent: #2a6df5;
+$secondary-accent: #00c9a7;
+$background-gradient: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+
+// Global typography
+.text-h6 {
+  letter-spacing: -0.02em;
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+  &-track {
+    background: rgba(0,0,0,0.05);
+  }
+  &-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .text-h4 {
+    font-size: 1.5rem !important;
+  }
+  
+  .q-table {
+    thead {
+      display: none;
+    }
+    
+    tr {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-radius: 12px;
+    }
+    
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px !important;
+      
+      &:before {
+        content: attr(data-label);
+        font-weight: 500;
+        margin-right: 16px;
+        color: $primary-accent;
+      }
+    }
+  }
+}
