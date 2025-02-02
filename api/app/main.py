@@ -344,5 +344,31 @@ async def get_mempool_info() -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao obter informações da mempool: {str(e)}")
 
+@app.get("/network/info")
+async def get_network_info() -> Dict[str, Any]:
+    """
+    Obtém informações gerais sobre a rede Bitcoin
+    """
+    try:
+        with bitcoin.get_rpc() as rpc:
+            # Obtém informações da blockchain
+            chain_info = rpc.getblockchaininfo()
+            
+            # Obtém informações da mempool
+            mempool_info = rpc.getmempoolinfo()
+            
+            return {
+                "isTestnet": chain_info["chain"] != "main",
+                "networkName": chain_info["chain"],
+                "lastBlock": chain_info["blocks"],
+                "mempoolSize": mempool_info["size"]
+            }
+            
+    except Exception as ex:
+        raise HTTPException(
+            status_code=503, 
+            detail=f"Erro ao obter informações da rede: {str(ex)}"
+        )
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
