@@ -7,13 +7,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install Quasar CLI
-RUN npm -g @quasar/cli
+RUN npm i -g @quasar/cli
 
 # Copy source files
 COPY . .
 
 # Stage 2: Build stage
-FROM develop-stage as build-stage
+FROM develop-stage AS build-stage
 
 RUN npm install
 
