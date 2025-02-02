@@ -1,19 +1,19 @@
-# Stage 1: Build application
-FROM node:lts-slim AS builder
+# Stage 1: Develop stage
+FROM node:lts-slim AS develop-stage
 
 WORKDIR /app
 
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies with clean cache
-RUN npm install
+# Install Quasar CLI
+RUN npm -g @quasar/cli
 
 # Copy source files
 COPY . .
 
-# Run quasar prepare with full project structure
-RUN npx quasar prepare
+# Stage 2: Build stage
+FROM develop-stage as build-stage
 
 RUN npm install
 
@@ -24,7 +24,7 @@ RUN quasar build
 FROM nginx:stable-alpine
 
 # Copy built assets from builder
-COPY --from=builder /app/dist/spa /usr/share/nginx/html
+COPY --from=build-stage /app/dist/spa /usr/share/nginx/html
 
 # Copy custom nginx config (if needed)
 # COPY nginx.conf /etc/nginx/conf.d/default.conf
