@@ -12,7 +12,10 @@ ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
 # Instala as dependências usando UV
 RUN uv sync --no-cache
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Expõe a porta da API
 EXPOSE 8000
 
-CMD ["sh", "-c", "EXTERNAL_IP=$(python -c \"import urllib.request; print(urllib.request.urlopen('https://checkip.amazonaws.com').read().decode('utf8').strip())\") && echo External IP is: $EXTERNAL_IP && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+ENTRYPOINT ["/entrypoint.sh"]
