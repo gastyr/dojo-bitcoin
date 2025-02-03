@@ -25,25 +25,26 @@ const api = axios.create({
 })
 
 // Interceptor para debug
-// api.interceptors.request.use(config => {
-//   console.log('Request:', config.method?.toUpperCase(), config.url)
-//   return config
-// })
+api.interceptors.request.use(config => {
+  console.log('Request:', config.method?.toUpperCase(), config.url)
+  console.log(baseURL)
+  return config
+})
 
-// api.interceptors.response.use(
-//   response => {
-//     console.log('Response:', response.status, response.config.url)
-//     return response
-//   },
-//   error => {
-//     console.error('API Error:', {
-//       status: error.response?.status,
-//       data: error.response?.data,
-//       message: error.message
-//     })
-//     return Promise.reject(error)
-//   }
-// )
+api.interceptors.response.use(
+  response => {
+    console.log('Response:', response.status, response.config.url)
+    return response
+  },
+  error => {
+    console.error('API Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    })
+    return Promise.reject(error)
+  }
+)
 
 export default boot(({ app }) => {
   app.config.globalProperties.$axios = axios
