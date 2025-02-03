@@ -20,12 +20,14 @@ RUN npm install
 # Build Quasar app
 RUN quasar build
 
-# Stage 2: Production server
+# Stage 3: Production server
 FROM nginx:stable-alpine
 
 # Copy built assets from builder
 COPY --from=build-stage /app/dist/spa /usr/share/nginx/html
 
+
+RUN sed -i 's/<\/body>/<script src="\/config.js"><\/script><\/body>/' /usr/share/nginx/html/index.html
 # Copy custom nginx config (if needed)
 # COPY nginx.conf /etc/nginx/conf.d/default.conf
 # COPY nginx.conf /etc/nginx/nginx.conf

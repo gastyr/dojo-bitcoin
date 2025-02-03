@@ -10,8 +10,29 @@ declare module '@vue/runtime-core' {
   }
 }
 
+declare global {
+  interface RuntimeConfig {
+    apiBaseUrl: string;
+  }
+
+  interface Window {
+    runtimeConfig: RuntimeConfig;
+  }
+}
+
+const getBaseURL = (): string => {
+  // Primeiro tenta pegar do runtime config
+  if (window.runtimeConfig?.apiBaseUrl) {
+    return window.runtimeConfig.apiBaseUrl;
+  }
+  // Fallback para ambiente de desenvolvimento
+  return 'http://localhost:8000';
+}
+
+const baseURL = getBaseURL();
+
 // const baseURL = 'http://136.248.90.25:8000'
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+// const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 // const baseURL = window.__CONFIG__.VITE_API_BASE_URL || 'http://localhost:8000';
 
 
