@@ -50,7 +50,7 @@ class BitcoinRPC:
             self._rpc = None
 
 external_ip = os.getenv("EXTERNAL_IP", "localhost")
-
+print(f"Allowed origins: [http://localhost:9000, http://localhost:8080, http://{external_ip}:8000, http://{external_ip}, https://{external_ip}]")
 app = FastAPI(title="Bitcoin Block Explorer API")
 
 app.add_middleware(
