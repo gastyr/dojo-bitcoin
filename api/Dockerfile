@@ -15,7 +15,4 @@ RUN uv sync --no-cache
 # Expõe a porta da API
 EXPOSE 8000
 
-# Cria uma variável de ambiente com o IP do servidor
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["sh", "-c", "EXTERNAL_IP=$(python -c \"import urllib.request; print(urllib.request.urlopen('https://checkip.amazonaws.com').read().decode('utf8').strip())\") && echo External IP is: $EXTERNAL_IP && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
