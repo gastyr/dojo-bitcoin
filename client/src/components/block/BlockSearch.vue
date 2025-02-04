@@ -12,7 +12,6 @@
               :rules="blockRules"
               filled
               dark
-              :loading="loading"
               lazy-rules
             >
               <template v-slot:prepend>
