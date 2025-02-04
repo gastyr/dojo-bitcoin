@@ -6,4 +6,4 @@ export EXTERNAL_IP=$(python3 -c "import urllib.request; print(urllib.request.url
 echo "Using API base URL: http://$EXTERNAL_IP"
 
 # Inicia o servidor uvicorn
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+exec uvicorn app.main:app --host 0.0.0.0 --port 8001

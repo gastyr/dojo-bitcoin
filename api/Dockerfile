@@ -16,6 +16,6 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Expõe a porta da API
-EXPOSE 8000
+EXPOSE 8001
 
 ENTRYPOINT ["/entrypoint.sh"]

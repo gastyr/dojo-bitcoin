@@ -26,14 +26,12 @@ const getBaseURL = (): string => {
     return window.runtimeConfig.apiBaseUrl;
   }
   // Fallback para ambiente de desenvolvimento
-  return 'http://localhost:8000';
+  return 'http://localhost:8001';
 }
 
 const baseURL = getBaseURL();
 
-// const baseURL = 'http://136.248.90.25:8000'
-// const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-// const baseURL = window.__CONFIG__.VITE_API_BASE_URL || 'http://localhost:8000';
+// const baseURL = 'http://localhost:8001'
 
 
 const api = axios.create({
